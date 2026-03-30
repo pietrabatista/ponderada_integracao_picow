@@ -215,9 +215,6 @@ O IRQ handler detecta mudanças no sensor digital (`Sensor digital (IRQ): PRESEN
  
 ![Firmware Final](/evidencias/final.png)
  
-### Firmware Final — Dados chegando no backend
-![Backend](evidencias/firmware_final_backend.png)
- 
 ### Backend — Dados inseridos no banco
 Os dados chegam no backend via RabbitMQ, são processados pelo middleware e inseridos no PostgreSQL. O log mostra `Dados inseridos no banco` com todos os campos corretos.
  
