@@ -6,7 +6,7 @@ Esse repositório contém o firmware para o Raspberry Pi Pico W, desenvolvido co
 
 ## Framework Utilizado
  
-**Arduino Framework** via suporte à placa Raspberry Pi Pico W pelo pacote [arduino-pico](https://github.com/earlephilhower/arduino-pico) de Earlé Philhower, instalado no Arduino IDE.
+**Arduino Framework** via suporte à placa Raspberry Pi Pico W pelo pacote [arduino-pico](https://github.com/earlephilhower/arduino-pico), instalado no Arduino IDE.
  
 ---
 
@@ -18,8 +18,8 @@ Esse repositório contém o firmware para o Raspberry Pi Pico W, desenvolvido co
 | Sensor de Presença (simulado com jumper) | Digital | GP15 | 0 (ausente) ou 1 (presente) |
 | Sensor de Tensão (simulado com jumper) | Analógico (ADC) | GP26 (ADC0) | 0V a 3.3V (0 a 4095 em 12 bits) |
  
-**Observação:** Por não possuir sensores físicos, os sensores foram simulados com jumpers fêmea-fêmea conectados diretamente nos pinos do Pico W:
- - Sensor digital: jumper entre GP15 e GND simula ausência/presença
+**Observação:** Por não possuir sensores físicos, simulei os sensores com jumpers fêmea-fêmea conectados diretamente nos pinos do Pico W:
+- Sensor digital: jumper entre GP15 e GND simula ausência/presença
 - Sensor analógico: jumper entre GP26 e AGND/3V3 simula variação de tensão
  
 ---
@@ -184,18 +184,44 @@ O firmware envia pacotes JSON para o endpoint `POST /telemetry` a cada 5 segundo
  
 ## Evidências de Funcionamento
  
-### Bloco 1 — Leitura de sensor digital com debounce
-![Bloco 1](evidencias/bloco1_sensor_digital.png)
+### Bloco 1 — Leitura de sensor digital 
+
+O Serial Monitor mostra alternância entre `PRESENÇA DETECTADA` e `SEM PRESENÇA` conforme o jumper é conectado e desconectado do GND. O debounce de 50ms garante que ruídos elétricos não gerem leituras falsas.
+![Bloco 1](/evidencias/bloco1.png)
  
-### Bloco 2 — Leitura de sensor analógico com ADC 12 bits e média móvel
-![Bloco 2 - 3V3](evidencias/bloco2_sensor_analogico_3v3.png)
-![Bloco 2 - GND](evidencias/bloco2_sensor_analogico_gnd.png)
+### Bloco 2 — Leitura de sensor analógico 
+
+**Jumper no 3V3 (tensão máxima):** ADC lê ≈ 4095, correspondendo a 3.30V. A média móvel suaviza pequenas variações de ruído.
+
+![Bloco 2 - 3V3](/evidencias/bloco2_3v.png)
+
+**Jumper no AGND (tensão mínima):** ADC lê ≈ 13, correspondendo a 0.01V. Praticamente zero, confirmando a calibração correta.
+
+![Bloco 2 - GND](/evidencias/bloco2_gnd.png)
+
+### Bloco 3 — Conectividade Wi-Fi
+
+O Pico W conecta na rede Wi-Fi, recebe um IP e inicia o envio de telemetria. A resposta HTTP 201 confirma que o backend recebeu os dados com sucesso.
+
+![Bloco 3 - WiFi](/evidencias/bloco3.png)
  
-### Firmware Final — IRQ + Telemetria sendo enviada com HTTP 201
-![Firmware Final](evidencias/firmware_final_serial.png)
+### Bloco 4 — Envio de Telemetria contínuo
+Telemetria sendo enviada continuamente a cada 5 segundos, alternando entre sensor digital e analógico. Todas as requisições retornam HTTP 201 (sucesso).
+ 
+![Bloco 4](/evidencias/bloco4.png)
+
+### Firmware Final — IRQ + Telemetria
+O IRQ handler detecta mudanças no sensor digital (`Sensor digital (IRQ): PRESENÇA DETECTADA`) enquanto a telemetria continua sendo enviada ao backend com HTTP 201.
+ 
+![Firmware Final](/evidencias/final.png)
  
 ### Firmware Final — Dados chegando no backend
 ![Backend](evidencias/firmware_final_backend.png)
+ 
+### Backend — Dados inseridos no banco
+Os dados chegam no backend via RabbitMQ, são processados pelo middleware e inseridos no PostgreSQL. O log mostra `Dados inseridos no banco` com todos os campos corretos.
+ 
+![Backend](/evidencias/backend.png)
  
 ---
  
@@ -214,11 +240,13 @@ ponderada_integracao_picow/
 ├── firmware_final/
 │   └── firmware_final.ino
 ├── evidencias/
-│   ├── bloco1_sensor_digital.png
-│   ├── bloco2_sensor_analogico_3v3.png
-│   ├── bloco2_sensor_analogico_gnd.png
-│   ├── firmware_final_serial.png
-│   └── firmware_final_backend.png
+│   ├── bloco1.png
+│   ├── bloco2_3v.png
+│   ├── bloco2_gnd.png
+│   ├── bloco3.png
+│   ├── bloco4.png
+│   ├── final.png
+│   └── backend.png
 └── README.md
 ```
  
